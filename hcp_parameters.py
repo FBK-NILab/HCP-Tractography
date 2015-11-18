@@ -68,13 +68,15 @@ par_csd_num_peak = 5
 par_csd_parallel = False
 
 ##
-par_eudx_seeds = 100000
+par_csd_tag = 'csd'
+##
+par_eudx_seeds = 1000000
 
 ##
 par_eudx_threshold = 0.2
 
 ##
-par_eudx_tag = 'eudx100k'
+par_eudx_tag = 'eudx1M'
 
 ##
 par_rec_tag = 'dti'

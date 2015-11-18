@@ -258,7 +258,7 @@ def tracking_eudx4csd(dir_src, dir_out, verbose=False):
     hdr['dim'] = dims
     hdr['vox_to_ras'] = affine
     strm = ((sl, None, None) for sl in streamlines)
-    trk_name = 'tractogram_' + par_b_tag + '_' + par_dim_tag + '_' + par_rec_tag + '_' + par_eudx_tag + '.trk'
+    trk_name = 'tractogram_' + par_b_tag + '_' + par_dim_tag + '_' + par_csd_tag + '_' + par_eudx_tag + '.trk'
     trk_out = os.path.join(dir_out, trk_name)
     nib.trackvis.write(trk_out, strm, hdr, points_space='voxel')    
 
