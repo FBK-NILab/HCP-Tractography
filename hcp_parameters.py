@@ -95,6 +95,9 @@ par_trk_step_size = 0.5
 par_trk_odf_tag = 'odf'
 
 ##
+par_trk_prob_tag = 'prob'
+
+##
 par_trk_fa_tag = 'fa'
 
 ##

@@ -12,8 +12,9 @@ from dipy.reconst.dti import TensorModel
 from dipy.data import get_sphere
 from dipy.tracking.utils import seeds_from_mask
 from dipy.reconst.dti import quantize_evecs
+from dipy.reconst.peaks import peaks_from_model
 from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel, auto_response
-from dipy.direction.probabilistic_direction_getter import ProbabilisticDirectionGetter
+from dipy.direction import ProbabilisticDirectionGetter
 from dipy.direction import DeterministicMaximumDirectionGetter
 from dipy.tracking.eudx import EuDX
 from dipy.tracking.local import ThresholdTissueClassifier, BinaryTissueClassifier
@@ -212,6 +213,58 @@ def tracking_eudx(dir_src, dir_out, verbose=False):
     nib.trackvis.write(trk_out, strm, hdr, points_space='voxel')    
 
 
+def tracking_eudx4csd(dir_src, dir_out, verbose=False):
+
+    # Load data
+    fbval = pjoin(dir_src, 'bvals_' + par_b_tag)
+    fbvec = pjoin(dir_src, 'bvecs_' + par_b_tag)
+    fdwi =  pjoin(dir_src, 'data_' + par_b_tag + '_' + par_dim_tag + '.nii.gz')
+    #fmask = pjoin(dir_src, 'nodif_brain_mask_' + par_dim_tag + '.nii.gz')
+    fmask = pjoin(dir_src, 'wm_mask_' + par_b_tag + '_' + par_dim_tag + '.nii.gz')
+
+    bvals, bvecs = read_bvals_bvecs(fbval, fbvec)
+    gtab = gradient_table(bvals, bvecs, b0_threshold=par_b0_threshold)
+    data, affine = load_nifti(fdwi, verbose)
+    mask, _ = load_nifti(fmask, verbose)
+
+    sphere = get_sphere('symmetric724') 
+
+    response, ratio = auto_response(gtab, data, roi_radius=par_ar_radius, 
+                                    fa_thr=par_ar_fa_th)
+    # print('Response function', response)
+
+    # Model fitting
+    csd_model = ConstrainedSphericalDeconvModel(gtab, response)
+    csd_peaks = peaks_from_model(csd_model, 
+                                 data, 
+                                 sphere,
+                                 relative_peak_threshold=.5,
+                                 min_separation_angle=25,
+                                 parallel=False)
+
+    # Computation of streamlines
+    streamlines = EuDX(csd_peaks.peak_values,
+                       csd_peaks.peak_indices, 
+                       seeds=par_eudx_seeds,
+                       odf_vertices= sphere.vertices,
+                       a_low=par_eudx_threshold)
+
+    # Saving tractography
+    voxel_size =  (par_dim_vox,) * 3
+    dims = mask.shape[:3]
+    hdr = nib.trackvis.empty_header()
+    hdr['voxel_size'] = voxel_size
+    hdr['voxel_order'] = 'LAS'
+    hdr['dim'] = dims
+    hdr['vox_to_ras'] = affine
+    strm = ((sl, None, None) for sl in streamlines)
+    trk_name = 'tractogram_' + par_b_tag + '_' + par_dim_tag + '_' + par_rec_tag + '_' + par_eudx_tag + '.trk'
+    trk_out = os.path.join(dir_out, trk_name)
+    nib.trackvis.write(trk_out, strm, hdr, points_space='voxel')    
+
+
+
+
 def tracking_maxodf(dir_src, dir_out, verbose=False):
 
     wm_name = 'wm_mask_' + par_b_tag + '_' + par_dim_tag + '.nii.gz'
@@ -231,6 +284,28 @@ def tracking_maxodf(dir_src, dir_out, verbose=False):
 
     trk_name = 'tractogram_' + par_b_tag + '_' + par_dim_tag + '_' + par_trk_odf_tag + '.trk'
     save_trk(pjoin(dir_out, trk_name), streamlines, affine, wm_mask.shape)
+
+
+def tracking_prob(dir_src, dir_out, verbose=False):
+
+    wm_name = 'wm_mask_' + par_b_tag + '_' + par_dim_tag + '.nii.gz'
+    wm_mask, affine = load_nifti(pjoin(dir_src, wm_name), verbose)
+
+    sh_name = 'sh_' + par_b_tag + '_' + par_dim_tag + '.nii.gz'
+    sh, _ = load_nifti(pjoin(dir_src, sh_name), verbose)
+
+    sphere = get_sphere('symmetric724') 
+
+    classifier = ThresholdTissueClassifier(wm_mask.astype('f8'), .5)
+    classifier = BinaryTissueClassifier(wm_mask)
+    max_dg = ProbabilisticDirectionGetter.from_shcoeff(sh, max_angle=par_trk_max_angle, sphere=sphere)
+    seeds = utils.seeds_from_mask(wm_mask, density=2, affine=affine)
+    streamlines = LocalTracking(max_dg, classifier, seeds, affine, step_size=par_trk_step_size)
+    streamlines = list(streamlines)
+
+    trk_name = 'tractogram_' + par_b_tag + '_' + par_dim_tag + '_' + par_trk_prob_tag + '.trk'
+    save_trk(pjoin(dir_out, trk_name), streamlines, affine, wm_mask.shape)
+
 
 
 def compute_tract_query(dir_src, dir_out, subj, verbose=False):

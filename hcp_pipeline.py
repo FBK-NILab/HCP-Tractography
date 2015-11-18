@@ -18,10 +18,10 @@ import os
 import sys
 import getopt
 from hcp_parameters import *
-from hcp_pipenode import single_shell_extraction, resample_data_resolution, compute_tensor_model, white_matter_mask_FA, white_matter_mask_wmparc, constrained_spherical_deconvolution, tracking_eudx, tracking_maxodf, compute_tract_query
+from hcp_pipenode import single_shell_extraction, resample_data_resolution, compute_tensor_model, white_matter_mask_FA, white_matter_mask_wmparc, constrained_spherical_deconvolution, tracking_eudx, tracking_eudx4csd, tracking_maxodf, tracking_prob, compute_tract_query
 
 
-do_step = [1] * 10
+do_step = [1] * 12
 verbose = False
 
 
@@ -100,7 +100,7 @@ def run_pipeline():
         print "Skipped."
     step += 1
 
-    print "Step %i: Computation of EuDX Tracking..." % step
+    print "Step %i: Computation of EuDX Tracking for DTI..." % step
     if do_step[step]:
         tracking_eudx(dir_res_out, dir_res_out, verbose)
         print "DONE!"
@@ -108,9 +108,25 @@ def run_pipeline():
         print "Skipped."
     step += 1
 
-    print "Step %i: Computation of Max ODF Tracking ..." % step
+    print "Step %i: Computation of EuDX Tracking for CSD..." % step
+    if do_step[step]:
+        tracking_eudx4csd(dir_res_out, dir_res_out, verbose)
+        print "DONE!"
+    else:
+        print "Skipped."
+    step += 1
+
+    print "Step %i: Computation of Max ODF Tracking for CSD..." % step
     if do_step[step]:
         tracking_maxodf(dir_res_out, dir_res_out, verbose)
+        print "DONE!"
+    else:
+        print "Skipped."
+    step += 1
+
+    print "Step %i: Computation of Probabilistic Tracking for CSD..." % step
+    if do_step[step]:
+        tracking_prob(dir_res_out, dir_res_out, verbose)
         print "DONE!"
     else:
         print "Skipped."
@@ -161,9 +177,11 @@ if __name__ == '__main__':
             print "         4. Computation of constrained spherical deconvolution"
             print "         5. Computation of white matter mask from FA"
             print "         6. Computation of white matter mask from wmparc"
-            print "         7. Computation of EuDX Tracking"
-            print "         8. Computation of Max ODF Tracking"
-            print "         9. Tract Dissection by White Matter Query Language"
+            print "         7. Computation of EuDX Tracking for DTI"
+            print "         8. Computation of EuDX Tracking for CSD"
+            print "         9. Computation of Max ODF Tracking for CSD"
+            print "        10. Computation of Probabilistic Tracking for CSD"
+            print "        11. Tract Dissection by White Matter Query Language"
             print "   help: -h"
             print "         this help"
             print "Examples:"
