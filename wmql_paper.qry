@@ -1,0 +1,141 @@
+#Nothing
+import FreeSurfer.qry
+
+HEMISPHERE.left |= '*.left'
+HEMISPHERE.right |= '*.right'
+
+#corpus_callosum |= '*orpus_callosum*'
+corpus_callosum |= 30000
+cerebellum |= 'Cerebellum_*'
+ventricles |= choroid_plexus.left or choroid_plexus.right or '*Ventricle*' or '*ventricle*'
+
+middlefrontalgyrus.side |= (rostralmiddlefrontal.side or caudalmiddlefrontal.side)  
+inferiorfrontalgyrus.side |= (parsopercularis.side or parstriangularis.side or parsorbitalis.side) 
+orbitofrontalgyrus.side |= (lateralorbitofrontal.side or medialorbitofrontal.side)
+frontal.side |= (superiorfrontal.side or middlefrontalgyrus.side or inferiorfrontalgyrus.side or orbitofrontalgyrus.side or frontalpole.side or precentral.side or paracentral.side)
+cingular.side |= (caudalanteriorcingulate.side or isthmuscingulate.side or posteriorcingulate.side or rostralanteriorcingulate.side or corpuscallosum.side)
+cingular_cortex.side |= (ctx_caudalanteriorcingulate.side or ctx_isthmuscingulate.side or ctx_posteriorcingulate.side or ctx_rostralanteriorcingulate.side or ctx_corpuscallosum.side)
+temporal.side |= ((entorhinal.side or parahippocampal.side or temporalpole.side or fusiform.side or superiortemporal.side or middletemporal.side or inferiortemporal.side or transversetemporal.side or bankssts.side))
+temporal_frontal.side |= (entorhinal.side or temporalpole.side or fusiform.side or superiortemporal.side or middletemporal.side or inferiortemporal.side) 
+parietal.side |= postcentral.side or precuneus.side or supramarginal.side or superiorparietal.side or inferiorparietal.side
+superior_parietal_lobule.side |= postcentral.side or precuneus.side or superiorparietal.side 
+inferior_parietal_lobule.side |= supramarginal.side or inferiorparietal.side
+occipital.side |= lingual.side or pericalcarine.side or cuneus.side or lateraloccipital.side or lingual.side or pericalcarine.side or cuneus.side or lateraloccipital.side
+subcortical.side |= VentralDC.side or Thalamus_Proper.side or Pallidum.side or Putamen.side or Amygdala.side or Brain_Stem or choroid_plexus.side
+frontal_frontal_section.side |= medialorbitofrontal.side or parsorbitalis.side
+precentral_postcentral.side |= only(precentral.side and postcentral.side and UnsegmentedWhiteMatter.side)
+#inferior_frontal_gyrus.side |= parsopercularis.side or parstriangularis.side or parsorbitalis.side
+#middle_frontal_gyrus.side |= caudalmiddlefrontal.side or rostralmiddlefrontal.side 
+
+amygdalas |= amygdala.right and amygdala.left 
+hippocampuses |= hippocampus.right and hippocampus.left 
+orbitofrontal.side |= lateralorbitofrontal.side or medialorbitofrontal.side
+prefrontal.side |= lateralorbitofrontal.side or medialorbitofrontal.side or frontalpole.side
+# premotor and supplementary motor according to Hofer et al
+premotor.side |= parsopercularis.side or parsorbitalis.side or parstriangularis.side or caudalmiddlefrontal.side or rostralmiddlefrontal.side or superiorfrontal.side or middlefrontalgyrus.side or inferiorfrontalgyrus.side
+primary_motor.side |= precentral.side
+primary_sensory.side |= paracentral.side or postcentral.side or posteriorcingulate.side
+parietal_lobe.side |= inferiorparietal.side or postcentral.side or precuneus.side or superiorparietal.side or supramarginal.side
+limbic_lobe.side |= caudalanteriorcingulate.left or isthmuscingulate.left or posteriorcingulate.left or rostralanteriorcingulate.left
+temporal_lobe.side |= bankssts.side or entorhinal.side or fusiform.side or inferiortemporal.side or middletemporal.side or parahippocampal.side or superiortemporal.side or temporalpole.side or transversetemporal.side 
+occipital_lobe.side |= cuneus.side or lateraloccipital.side or lingual.side or pericalcarine.side
+
+#############
+# NOTES
+# - commented CC parts were optimal for UNF datasets 3T    
+#############
+
+###########################
+# Corpus Callosum tracts
+# Rostrum - CC_1
+# Genu - CC_2
+# Rostral body - CC_3
+# Anterior midbody - CC_4
+# Posterior midbody - CC_5
+# Isthmus - CC_6
+# Splenium - CC_7
+#
+###########################
+CC_1 = endpoints_in(orbitofrontal.left) and endpoints_in(orbitofrontal.right) not in posterior_of(amygdalas)
+CC_2 = endpoints_in(prefrontal.left) and endpoints_in(prefrontal.right) not in posterior_of(amygdalas)
+CC_3_wm |= premotor.left and premotor.right not in posterior_of(putamen.left) not in posterior_of(putamen.right) and inferior_of(thalamus_proper.left) and inferior_of(thalamus_proper.right) 
+CC_3_endpoints |= endpoints_in(premotor.left) and endpoints_in(premotor.right) not in posterior_of(putamen.left) not in posterior_of(putamen.right) and inferior_of(thalamus_proper.left) and inferior_of(thalamus_proper.right) 
+CC_3 = CC_3_wm or CC_3_endpoints
+CC_4_endpoints |= endpoints_in(primary_motor.left) and endpoints_in(primary_motor.right) not in brain_stem and inferior_of(thalamus_proper.left) and inferior_of(thalamus_proper.right) 
+CC_4_wm |= primary_motor.left and primary_motor.right not in brain_stem and inferior_of(thalamus_proper.left) and inferior_of(thalamus_proper.right) not in premotor.left not in premotor.right and endpoints_in(posterior_of(middlefrontalgyrus.left)) and endpoints_in(posterior_of(middlefrontalgyrus.right)) not in posterior_of(precentral.left) not in posterior_of(precentral.right) not in anterior_of(primary_motor.left) not in anterior_of(primary_motor.right) not in ventricles not in thalamus_proper.right not in thalamus_proper.left 
+CC_4 = CC_4_wm or CC_4_endpoints 
+CC_5 = endpoints_in(primary_sensory.left) and endpoints_in(primary_sensory.right) and inferior_of(thalamus_proper.left) and inferior_of(thalamus_proper.right) not in ventricles 
+CC_6 = endpoints_in(parietal_lobe.left or isthmuscingulate.left or superiortemporal.left) and endpoints_in(parietal_lobe.right or isthmuscingulate.right or superiortemporal.right) not in temporal.right not in temporal.left not in anterior_of(postcentral.left) not in anterior_of(postcentral.right)
+CC_7 = endpoints_in(occipital.left or inferiortemporal.left) and endpoints_in(occipital.right or inferiortemporal.right) not in temporal.left not in temporal.right not in anterior_of(postcentral.left) not in anterior_of(postcentral.right)
+
+
+# Full CC - DTI-like - Mohawk only
+# mohawk = no lateral connections - DTI-like 
+CC_mohawk = (((frontal.left and frontal.right) or (parietal.left and parietal.right) or (occipital.left and occipital.right) or (cingular.left and cingular.right))) not in brain_stem not in lateral_of(hippocampus.right)  not in lateral_of(hippocampus.left) 
+CC_mohawk_endpoints = (endpoints_in(frontal.left) and endpoints_in(frontal.right)) or (endpoints_in(parietal.left) and endpoints_in(parietal.right)) or (endpoints_in(occipital.left) and endpoints_in(occipital.right)) or (endpoints_in(cingular.left) and endpoints_in(cingular.right)) not in brain_stem not in lateral_of(hippocampus.right)  not in lateral_of(hippocampus.left) not in ventricles not in thalamus_proper.right not in thalamus_proper.left
+# full CC - not in paper - why do we not have the CC? do we get it from the catani? 
+CC_full = (frontal.left and frontal.right) or (parietal.left and parietal.right) or (occipital.left and occipital.right) or (cingular.left and cingular.right) not in brain_stem not in lateral_of(hippocampus.right)  not in lateral_of(hippocampus.left) not in ventricles not in thalamus_proper.right not in thalamus_proper.left
+
+###############
+### CC 3 and CC4 from St-Amour - for Cunnane works better too ###
+#CC_3_wm |= premotor.left and premotor.right not in posterior_of(putamen.left) not in posterior_of(putamen.right) and inferior_of(thalamus_proper.left) and inferior_of(thalamus_proper.right) 
+#CC_3_endpoints |= endpoints_in(premotor.left) and endpoints_in(premotor.right) not in posterior_of(putamen.left) not in posterior_of(putamen.right) and inferior_of(thalamus_proper.left) and inferior_of(thalamus_proper.right) 
+#CC_3_temp |= CC_3_wm or CC_3_endpoints
+#CC_4 = (endpoints_in(superiorfrontal.left) and endpoints_in(superiorfrontal.right)) not in anterior_of(caudate.right) not in brain_stem and inferior_of(thalamus_proper.left) and inferior_of(thalamus_proper.right) not in ventricles not in thalamus_proper.right not in thalamus_proper.left 
+#  or (endpoints_in(primary_motor.left) and endpoints_in(primary_motor.right))
+#CC_3 = CC_3_temp not in CC_4
+#CC_5 = endpoints_in(primary_sensory.left) and endpoints_in(primary_sensory.right) and inferior_of(thalamus_proper.left) and inferior_of(thalamus_proper.right) not in ventricles 
+#CC_6 = endpoints_in(parietal_lobe.left or isthmuscingulate.left or superiortemporal.left) and endpoints_in(parietal_lobe.right or isthmuscingulate.right or superiortemporal.right) not in temporal.right not in temporal.left not in anterior_of(postcentral.left) not in anterior_of(postcentral.right) and inferior_of(thalamus_proper.left) and inferior_of(thalamus_proper.right) 
+################
+
+#######################
+# association tracts
+######################
+# Cingulum bundle (cb) - This gives multiple subparts - good test for Gab's tracking!
+Cg.side = only(cingular.side and (middlefrontalgyrus.side or cuneus.side or entorhinal.side or superiorfrontal.side or inferiorparietal.side or fusiform.side or medialorbitofrontal.side or lateralorbitofrontal.side or parahippocampal.side or precuneus.side or lingual.side or centrum_semiovale.side)) not in lateral_of(amygdala.left) not in lateral_of(amygdala.right)
+
+# Superior longitudinal fasciculus (SLF)
+SLF1.side = endpoints_in(superiorparietal.side) and (middlefrontalgyrus.side or superiorfrontal.side) and only(frontal.side or parietal.side or centrum_semiovale.side) 
+SLF2.side = endpoints_in(inferiorparietal.side or lateraloccipital.side) and (middlefrontalgyrus.side or superiorfrontal.side) and only(frontal.side or parietal.side or centrum_semiovale.side)
+SLF3.side = endpoints_in(supramarginal.side) and endpoints_in(inferiorfrontalgyrus.side) and only(frontal.side or parietal.side or centrum_semiovale.side)
+
+# Arcuate Fasciculus
+AF.side = endpoints_in(inferiorfrontalgyrus.side or middlefrontalgyrus.side or precentral.side) and endpoints_in(temporal.side) not in medial_of(supramarginal.side) and centrum_semiovale.side and frontal.side and temporal.side and parietal.side not in putamen.side
+
+# Inferior Fronto-Occipital Fasciculus (IFOF) - wonderbar
+IFOF.side = endpoints_in(orbitofrontalgyrus.side or inferiorfrontalgyrus.side) and endpoints_in(occipital.side) and temporal.side and insula.side not in inferior_of(putamen.side) not in (precentral.side or postcentral.side) not in hemisphere.opposite
+
+# Inferior longitudinal fasciculus (ILF) - wonderbar
+ILF.side = only(temporal.side and occipital.side) and anterior_of(hippocampus.side) not in parahippocampal.side
+
+# Middle Longitudinal fasciculus (MdLF)
+MdLF.side = superiortemporal.side and endpoints_in(inferior_parietal_lobule.side) not in anterior_of(amygdala.side) and centrum_semiovale.side not in hemisphere.opposite not in endpoints_in(superior_parietal_lobule.side) not in endpoints_in(supramarginal.side) not in putamen.side not in superiorfrontal.side not in medial_of(hippocampus.side)
+
+# Uncinate Fasciculus
+# This version is cleaner without the inferiorfrontalgyrus.side - deviating from the paper's definition
+UF.side = insula.side and endpoints_in(orbitofrontal.side) and endpoints_in(temporal.side and anterior_of(amygdala.side)) not in posterior_of(putamen.side) not in centrum_semiovale.side not in superiorfrontal.side not in postcentral.side not in precentral.side
+
+
+#####################
+# Projection tracts
+#####################
+cst_pre.side |= (precentral.side and brain_stem)
+cst_post.side |= (postcentral.side and brain_stem)
+CST_with_cerebellum.side = cst_pre.side or cst_post.side not in hemisphere.opposite not in Frontal.side
+CST.side = cst_pre.side or cst_post.side not in hemisphere.opposite not in cerebellum_white_matter.side not in Frontal.side 
+
+# Optic radiations
+# too restrictive if I put thalamus_proper. With more density, would be maybe better
+OR.side = (endpoints_in(occipital.side) and subcortical.side) not in hemisphere.opposite not in frontal.side not in cerebellum_white_matter.side not in temporal.side not in Brain_Stem
+
+#comm_tracts = endpoints_in(hemisphere.left) and endpoints_in(hemisphere.right)
+comm_tracts = endpoints_in(hemisphere.left) and endpoints_in(hemisphere.right) not in subcortical.left not in subcortical.right
+
+
+
+
+
+
+
+
+
